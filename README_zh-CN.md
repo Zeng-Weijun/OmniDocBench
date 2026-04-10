@@ -1,3 +1,5 @@
+![](https://github.com/user-attachments/assets/f705bf54-5dd2-42ba-af2d-40a0a174b0b0)
+
 <h1 align="center">
 OmniDocBench
 </h1>
@@ -5,92 +7,47 @@ OmniDocBench
 <div align="center">
 <a href="./README.md">English</a> | 简体中文
 
-[\[📜 arXiv\]](https://arxiv.org/abs/2412.07626) | [[Dataset (🤗Hugging Face)]](https://huggingface.co/datasets/opendatalab/OmniDocBench) | [[Dataset (OpenDataLab)]](https://opendatalab.com/OpenDataLab/OmniDocBench)| [[Official Site (OpenDataLab)]](https://opendatalab.com/omnidocbench)
+[\[📜 arXiv\]](https://arxiv.org/abs/2412.07626) | [[Dataset (🤗Hugging Face)]](https://huggingface.co/datasets/opendatalab/OmniDocBench) | [[Dataset (OpenDataLab)]](https://opendatalab.com/OpenDataLab/OmniDocBench)
 </div>
 
 **OmniDocBench**是一个针对真实场景下多样性文档解析评测集，具有以下特点：
-- **文档类型多样**：该评测集涉及1355个PDF页面，涵盖9种文档类型、4种排版类型和3种语言类型。覆盖面广，包含学术文献、财报、报纸、教材、手写笔记等；
+- **文档类型多样**：该评测集涉及981个PDF页面，涵盖9种文档类型、4种排版类型和3种语言类型。覆盖面广，包含学术文献、财报、报纸、教材、手写笔记等；
 - **标注信息丰富**：包含15个block级别（文本段落、标题、表格等，总量超过20k）和4个Span级别（文本行、行内公式、角标等，总量超过80k）的文档元素的**定位信息**，以及每个元素区域的**识别结果**（文本Text标注，公式LaTeX标注，表格包含LaTeX和HTML两种类型的标注）。OmniDocBench还提供了各个文档组件的**阅读顺序**的标注。除此之外，在页面和block级别还包含多种属性标签，标注了5种**页面属性标签**、3种**文本属性标签**和6种**表格属性标签**。
 - **标注质量高**：经过人工筛选，智能标注，人工标注及全量专家质检和大模型质检，数据质量较高。
-- **配套评测代码**：设计端到端评测及单模块评测代码，保证评测的公平性及准确性。
+- **配套评测代码**：当前维护的公开分支聚焦端到端评测，并在页级匹配后输出文本、公式、表格、阅读顺序等细粒度指标。
 
-可进行以下几个维度的评测：
-- 端到端评测：包括end2end和md2md两种评测方式
-- Layout检测
-- 表格识别
-- 公式识别
-- 文本OCR
+当前公开运行链路支持的评测维度为：
+- 文本
+- 行间公式
+- 表格
+- 阅读顺序
 
 目前支持的metric包括：
 - Normalized Edit Distance
 - BLEU
 - METEOR
 - TEDS
-- COCODet (mAP, mAR, etc.)
-
-## 目录
-
-- [目录](#目录)
-- [更新](#更新)
-- [评测集介绍](#评测集介绍)
-- [评测](#评测)
-  - [环境配置和运行](#环境配置和运行)
-    - [使用docker](#使用docker)
-  - [端到端评测](#端到端评测)
-    - [端到端评测方法-end2end](#端到端评测方法-end2end)
-    - [端到端评测方法-md2md](#端到端评测方法-md2md)
-  - [公式识别评测](#公式识别评测)
-  - [文字OCR评测](#文字ocr评测)
-  - [表格识别评测](#表格识别评测)
-  - [Layout检测](#layout检测)
-  - [公式检测](#公式检测)
-- [工具](#工具)
-- [评测模型信息](#评测模型信息)
-  - [End2End](#end2end)
-  - [Text Recognition](#text-recognition)
-  - [Layout](#layout)
-  - [Formula](#formula)
-  - [Table](#table)
-- [TODO](#todo)
-- [Known Issues](#known-issues)
-- [Acknowledgement](#acknowledgement)
-- [版权声明](#版权声明)
-- [引用](#引用)
+- CDM
 
 ## 更新
 
-[2026/03/31] 更新了PaddleOCR-VL-1.5、Youtu-Parsing、FireRed-OCR、Logics-Parsing-v2、Ovis2.6-30B-A3B、MinerU2.5、HunyuanOCR、FD-RL、DeepSeek-OCR-2、MonkeyOCR-pro-3B、OCRVerse、dots.ocr、Dolphin-v2、MonkeyOCR-Pro-3B、POINTS-Reader、Gemini-3 Flash、Gemini-3 Pro、Kimi 2.5、GPT5.2、GPT-4o、InternVL3.5、GLM-OCR、OpenDoc 和 Mathpix 的模型评测结果，新增了上述榜单模型的推理代码。
-
-[2025/11/04] 增加docker运行环境，包含评测环境和CDM环境。
-
-[2025/10/28] 更新PaddleOCR-VL, Qwen3-VL-235B-A22B-Instruct, Deepseek-OCR, Dolphin-1.5模型评测结果。
-
-[2025/09/25] **重大版本更新**：从版本**v1.0** 更新到 **v1.5**
-  - 评测代码：（1）更新了**混合匹配**方案，使公式和文本之间也可以进行匹配，从而缓解了模型将公式写成unicode后造成的分数误差；（2）将**CDM**的计算直接写入metric部分，用户如果有CDM环境可以直接通过在config文件中配置`CDM`计算出指标，另外，仍保留了之前输出公式匹配对JSON文件的接口，命名为`CDM_plain`;
-  - 评测集：（1）报纸和笔记类型的图片从72DPI提升到**200DPI**；（2）**新增374个页面**，平衡了中英文页面的数量，并提升了包含公式页面的占比；（3）公式新增语种属性；（4）修复部分文本和表格的标注错别字；
-  - 榜单：（1）去除了中英文的分组，直接计算的是所有页面的平均分；（2）**Overall**指标的计算方式改为 ((1-文本编辑距离)*100 + 表格TEDS + 公式CDM)/3;
-  - 注意：评测代码（本repo）和评测集（HuggingFace和OpenDataLab）的`main`分支已经更新到版本**v1.5**，如果仍想使用v1.0版本的代码和评测集，请切换分支到`v1_0`.
-
-[2025/09/09] 使用最新Dolphin推理脚本和模型权重，更新Dolphin的评测结果，新增了Dolphin infer脚本。
-
-[2025/08/20] 更新PP-StructureV3、MonkeyOCR-pro-1.2B模型评测结果，新增了Mistral OCR、Pix2text、phocr、Nanonets-OCR-s infer脚本。
-
-[2025/07/31] 新增了MinerU2.0-vlm、Marker-1.7.1、PP-StructureV3、MonkeyOCR-pro-1.2B、Dolphin、Nanonets-OCR-s、OCRFlux-3B、Qwen2.5-VL-7B、InternVL3-78B模型的评测；更新了MinerU版本。
-
-[2025/03/27] 新增了Pix2Text、Unstructured、OpenParse、Gemini-2.0 Flash、Gemini-2.5 Pro、Mistral OCR、OLMOCR、Qwen2.5-VL-72B模型的评测；
-
-[2025/03/10] OmniDocBench被CVPR 2025接收啦！
-
 [2025/01/16] 更新Marker、Tesseract OCR、StructEqTable版本；新增Docling、OpenOCR、EasyOCR评测；Table部分的Edit Distance计算改成用norm后的字段；新增评测模型版本信息。
+
+## 当前公开仓库范围
+
+当前维护的公开代码路径是 `src/` 下的端到端评测器，默认模板为 [configs/end2end.yaml](./configs/end2end.yaml)。
+
+历史上的单模块评测入口和顶层重复源码目录已经从运行链路中移除。当前仍会被评测实际使用到的文件和目录见 [OPEN_SOURCE_RUNTIME.md](./OPEN_SOURCE_RUNTIME.md)。
+下方保留的历史单模块章节仅用于说明原始项目背景，不代表当前公开分支仍可直接运行。
 
 ## 评测集介绍
 
-该评测集涉及1355个PDF页面，涵盖9种文档类型、4种排版类型和3种语言类型。OmniDocBench具有丰富的标注，包含15个block级别的标注（文本段落、标题、表格等）和4个Span级别的标注（文本行、行内公式、角标等）。所有文本相关的标注框上都包含文本识别的标注，公式包含LaTeX标注，表格包含LaTeX和HTML两种类型的标注。OmniDocBench还提供了各个文档组件的阅读顺序的标注。除此之外，在页面和block级别还包含多种属性标签，标注了5种页面属性标签、3种文本属性标签和6种表格属性标签。
+该评测集涉及981个PDF页面，涵盖9种文档类型、4种排版类型和3种语言类型。OmniDocBench具有丰富的标注，包含15个block级别的标注（文本段落、标题、表格等）和4个Span级别的标注（文本行、行内公式、角标等）。所有文本相关的标注框上都包含文本识别的标注，公式包含LaTeX标注，表格包含LaTeX和HTML两种类型的标注。OmniDocBench还提供了各个文档组件的阅读顺序的标注。除此之外，在页面和block级别还包含多种属性标签，标注了5种页面属性标签、3种文本属性标签和6种表格属性标签。
 
 ![](https://github.com/user-attachments/assets/f3e53ba8-bb97-4ca9-b2e7-e2530865aaa9)
 
 <details>
-  <summary>【评测集的数据格式】</summary>
+  <summary>评测集的数据格式</summary>
 
 评测集的数据格式为JSON，其结构和各个字段的解释如下：
 
@@ -167,7 +124,7 @@ OmniDocBench
 </details>
 
 <details>
-  <summary>【验证集类别】</summary>
+  <summary>验证集类别</summary>
 
 验证集类别包括：
 
@@ -202,7 +159,7 @@ OmniDocBench
 </details>
 
 <details>
-  <summary>【验证集属性标签】</summary>
+  <summary>验证集属性标签</summary>
 
 页面分类属性包括：
 ```
@@ -315,535 +272,372 @@ OmniDocBench开发了一套基于文档组件拆分和匹配的评测方法，�
 
 ### 环境配置和运行
 
-环境配置只需要在该项目目录下运行以下命令即可：
-
-```bash
-conda create -n omnidocbench python=3.10
-conda activate omnidocbench
-pip install -r requirements.txt
-```
-
-如果需要评测的模型在解析表格时的格式是LaTeX, 则需要安装[LaTeXML](https://math.nist.gov/~BMiller/LaTeXML/)。它将会在评测过程中自动将LaTeX表格转换成HTML格式。*requirements.txt*文件中没有包括LaTeXML的安装，如果有需要请单独安装。
-
-请下载OmniDocBench评测集：[Hugging Face](https://huggingface.co/datasets/opendatalab/OmniDocBench) or [OpenDataLab](https://opendatalab.com/OpenDataLab/OmniDocBench). 评测集的文件夹结构如下：
-
-```
-OmniDocBench/
-├── images/     // Image files
-│   ├── xxx.jpg
-│   ├── ...
-├── pdfs/       // Same page as images but in PDF format
-│   ├── xxx.pdf
-│   ├── ...
-├── OmniDocBench.json // OmniDocBench ground truth
-```
-
-使用图片或PDF进行推理都是允许的。推理结果应该以`markdown格式`存储在一个文件夹中，文件名与图片文件名相同但以`.md`为扩展名。
-
-所有的评测的输入都是通过config文件进行配置的，我们在[configs](./configs)路径下提供了各个任务的模板，并且在接下来的小节也会对config文件的内容做详细讲解。
-
-对于端到端评测，你只需要在[end2end.yaml](./configs/end2end.yaml)文件中的`ground_truth`的`data_path`中提供`OmniDocBench.json`的路径，在`prediction`的`data_path`中提供包含推理结果的文件夹路径，如下：
-
-```yaml
- # -----以下是需要修改的部分 -----
- dataset:
-    dataset_name: end2end_dataset
-    ground_truth:
-      data_path: ./OmniDocBench.json
-    prediction:
-      data_path: path/to/your/model/result/dir
-```
-
-配置好config文件后，只需要将config文件作为参数传入，运行以下代码即可进行评测：
-
-```bash
-python pdf_validation.py --config <config_path>
-```
-
-评测结果将会存储在[result](./result)目录下。如果需要生成结果的leaderboard，可以使用[tools/generate_result_tables.ipynb](./tools/generate_result_tables.ipynb)。
-
+评测流水线需要 Python 3.10 以及若干系统依赖（TeX Live、ImageMagick、Ghostscript）以支持 CDM 公式指标。提供两种部署方式：
 
 <details>
-  <summary>【result文件夹信息】</summary>
+<summary><b>方式 A：Conda（推荐开发使用）</b></summary>
 
-result文件夹包含以下信息：
+> 需要 Ubuntu 22.04 / 20.04，至少 8 GB 磁盘空间和 8 GB 内存，root 权限。
 
+**第 1 步 — 创建环境并安装 Python 依赖**
+
+```bash
+conda create -n omnidocbench python=3.10 -y
+conda activate omnidocbench
+git clone <repo_url> && cd Omnidocbench_v1.6
+pip install -e .
+python -c "from src.core.pipeline import run_config_file; print('OK')"
 ```
-result/
-├── <model_name>_<match_method>_metric_result.json
-├── <model_name>_<match_method>_<element>_per_page_edit.json
-├── <model_name>_<match_method>_<element>_result.json
+
+**第 2 步 — 安装 Ghostscript**
+
+CDM 指标需要 Ghostscript 通过 ImageMagick 完成 PDF 到 PNG 的转换。
+
+```bash
+sudo apt-get update && sudo apt-get install -y ghostscript
+gs --version   # 预期: 9.55.0 (Ubuntu 22.04)
 ```
 
-`<model_name>` 是模型的名称（与配置文件中预测结果的文件夹名称相同）。`<match_method>` 是用于匹配的方法，例如 `quick_match` 或 `simple_match`。`<element>` 是元素类型，包括 `text`、`dispaly_formula`、`table` 和 `reading_order`。
+**第 3 步 — 安装 TeX Live 2025**
 
-`<model_name>_<match_method>_metric_result.json` 文件包含评测结果，包括编辑距离、TEDS等。
+CDM 指标需要 `pdflatex` 并支持 CJK 中文字体。
 
-`<model_name>_<match_method>_<element>_per_page_edit.json` 文件包含每个元素的每个页面的编辑距离。
+```bash
+cd ~ && wget http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
+tar -xzf install-tl-unx.tar.gz && cd install-tl-*/
+sudo ./install-tl   # 交互式安装，全量约 7 GB
 
-`<model_name>_<match_method>_<element>_result.json` 文件包含每个元素的ground truth和预测结果的匹配对。
+echo 'export PATH=/usr/local/texlive/2025/bin/x86_64-linux:$PATH' >> ~/.bashrc
+source ~/.bashrc
+pdflatex --version | head -2   # 预期: pdfTeX ... (TeX Live 2025)
+
+# 验证 CJK 支持
+kpsewhich CJK.sty && kpsewhich c70gkai.fd
+# 如果没有输出: sudo tlmgr install cjk cjkutils arphic gkai
+```
+
+**第 4 步 — 安装 ImageMagick 7.x**（从源码编译）
+
+Ubuntu 22.04 apt 默认是 ImageMagick 6.x，CDM 需要 7.x。
+
+```bash
+sudo apt-get install -y build-essential pkg-config \
+  libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
+  libfreetype6-dev libfontconfig1-dev
+
+cd /tmp
+wget https://github.com/ImageMagick/ImageMagick/archive/refs/tags/7.1.1-47.tar.gz
+tar xzf 7.1.1-47.tar.gz && cd ImageMagick-7.1.1-47
+./configure --with-modules --enable-shared --with-gslib \
+  --with-gs-font-dir=/usr/share/fonts/type1/gsfonts --prefix=/usr/local
+make -j$(nproc) && sudo make install && sudo ldconfig
+magick --version | head -2   # 预期: ImageMagick 7.1.1-47
+
+# 允许 PDF 读写
+POLICY_FILE=$(find /usr/local/etc/ImageMagick-7 -name policy.xml 2>/dev/null | head -1)
+[ -n "$POLICY_FILE" ] && sudo sed -i \
+  's|<policy domain="coder" rights="none" pattern="PDF" />|<policy domain="coder" rights="read\|write" pattern="PDF" />|' \
+  "$POLICY_FILE"
+```
+
+**第 5 步 — 验证并运行**
+
+```bash
+python -m pytest tools/test_environment_and_smoke.py::TestEnvironmentVersions -v -s
+python pdf_validation.py --config configs/end2end.yaml
+```
 
 </details>
 
-#### 使用docker
+<details>
+<summary><b>方式 B：Docker（推荐用于复现）</b></summary>
 
-拉取docker镜像
+预构建 Docker 镜像打包了经过验证的完整运行时（Python 3.10 conda 环境 + TeX Live 2025 + ImageMagick 7.1.1-47 + Ghostscript 9.55.0）。
+
+**拉取镜像**
+
+```bash
+docker pull ghcr.io/zeng-weijun/omnidocbench-eval:repro-ubuntu2204
 ```
-docker pull sunyuefeng/omnidocbench-env:v1.5
+
+**使用自己的数据运行**
+
+```bash
+docker run --rm \
+  --entrypoint bash \
+  -v /path/to/your_gt.json:/workspace/gt/your_gt.json:ro \
+  -v /path/to/your_predictions:/workspace/data_md/predictions:ro \
+  -v /path/to/output:/workspace/result \
+  ghcr.io/zeng-weijun/omnidocbench-eval:repro-ubuntu2204 \
+  -c 'cat > configs/custom.yaml << "EOF"
+end2end_eval:
+  metrics:
+    text_block:
+      metric: [Edit_dist]
+    display_formula:
+      metric: [Edit_dist, CDM]
+    table:
+      metric: [TEDS, Edit_dist]
+    reading_order:
+      metric: [Edit_dist]
+  dataset:
+    dataset_name: end2end_dataset
+    ground_truth:
+      data_path: ./gt/your_gt.json
+    prediction:
+      data_path: ./data_md/predictions
+    match_method: quick_match
+    match_workers: 4
+    quick_match_truncated_timeout_sec: 300
+    timeout_fallback_max_chunk_span: 10
+    timeout_fallback_order_penalty: 0.10
+EOF
+python pdf_validation.py --config configs/custom.yaml'
 ```
-运行docker镜像（需要挂载评测数据&评测代码目录）
+
+**验证镜像内运行时**
+
+```bash
+docker run --rm --entrypoint bash \
+  ghcr.io/zeng-weijun/omnidocbench-eval:repro-ubuntu2204 \
+  -lc 'bash script/verify_repro_runtime.sh'
 ```
-docker run -it -v /your/path/to/OmniDocBench:/your/OmniDocBench/path/in/docker --name omnidocbench-env sunyuefeng/omnidocbench-env:v1.5 /bin/bash
+
+**从源码构建**（可选）
+
+```bash
+bash script/build_repro_docker_image.sh
 ```
-所有的依赖都已经安装在镜像中，可以直接运行`pdf_validation.py`：
-```
-cd /your/OmniDocBench/path/in/docker
+
+</details>
+
+#### 验证版本
+
+| 组件 | 版本 |
+|------|------|
+| Python | 3.10.x |
+| TeX Live | 2025 |
+| pdflatex | 3.141592653-2.6-1.40.28 |
+| ImageMagick | 7.1.1-47 |
+| Ghostscript | 9.55.0 |
+
+#### Worker 并发配置
+
+评测流水线有三个并行阶段，建议每个阶段的 worker 数设为机器空闲线程数的 1/3 ~ 1/2，避免死锁或 OOM：
+
+| 阶段 | 配置项 | 说明 |
+|------|--------|------|
+| 页面匹配 | `match_workers` | 文本对齐 |
+| CDM 渲染 | `cdm_workers` | 每个 worker 约 1 GB 内存 |
+| TEDS 表格 | `teds_workers` | 表格结构相似度 |
+
+#### 运行评测
+
+所有评测输入通过 [configs/end2end.yaml](./configs/end2end.yaml) 配置。修改 `ground_truth.data_path` 和 `prediction.data_path` 指向你的数据，然后运行：
+
+```bash
 python pdf_validation.py --config <config_path>
 ```
 
 ### 端到端评测
 
-端到端评测是对模型在PDF页面内容解析上的精度作出的评测。以模型输出的对整个PDF页面解析结果的Markdown作为Prediction。Overall指标的计算方式为:
+端到端评测是对模型在PDF页面内容解析上的精度作出的评测。以模型输出的对整个PDF页面解析结果的Markdown作为Prediction。
 
-$$\text{Overall} = \frac{(1-\textit{Text Edit Distance}) \times 100 + \textit{Table TEDS} +\textit{Formula CDM}}{3}$$
-
-<table style="width:100%; border-collapse: collapse;">
-    <caption>Comprehensive evaluation of document parsing on OmniDocBench (v1.5)</caption>
-    <thead>
-        <tr>
-            <th>Model Type</th>
-            <th>Methods</th>
-            <th>Size</th>
-            <th>Overall&#x2191;</th>
-            <th>Text<sup>Edit</sup>&#x2193;</th>
-            <th>Formula<sup>CDM</sup>&#x2191;</th>
-            <th>Table<sup>TEDS</sup>&#x2191;</th>
-            <th>Table<sup>TEDS-S</sup>&#x2191;</th>
-            <th>Read Order<sup>Edit</sup>&#x2193;</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td rowspan="27"><strong>Specialized</strong><br><strong>VLMs</strong></td>
-        <tr>
-            <td>PaddleOCR-VL-1.5</td>
-            <td>0.9B</td>
-            <td><strong>94.50</strong></td>
-            <td><strong>0.035</strong></td>
-            <td><strong>94.21</strong></td>
-            <td>92.76</td>
-            <td>95.79</td>
-            <td>0.042</td>
-        </tr>
-        <tr>
-            <td>GLM-OCR</td>
-            <td>0.9B</td>
-            <td><ins>94.35</ins></td>
-            <td>0.045</td>
-            <td><ins>93.65</ins></td>
-            <td><ins>93.89</ins></td>
-            <td><strong>96.50</strong></td>
-            <td>0.047</td>
-        </tr>
-        <tr>    
-            <td>Youtu-Parsing</td>
-            <td>2.5B</td>
-            <td>93.37</td>
-            <td>0.042</td>
-            <td>91.22</td>
-            <td>93.10</td>
-            <td><ins>96.47</ins></td>
-            <td><strong>0.026</strong></td>
-        </tr>
-        <tr>    
-            <td>PaddleOCR-VL</td>
-            <td>0.9B</td>
-            <td>92.86</td>
-            <td><strong>0.035</strong></td>
-            <td>91.22</td>
-            <td>90.89</td>
-            <td>94.76</td>
-            <td>0.043</td>
-        </tr>
-        <tr>
-            <td>Logics-Parsing-v2</td>
-            <td>4B</td>
-            <td>92.56</td>
-            <td>0.043</td>
-            <td>91.41</td>
-            <td>90.54</td>
-            <td>93.85</td>
-            <td>0.044</td>
-        </tr>
-        <tr>    
-            <td>FireRed-OCR</td>
-            <td>2B</td>
-            <td>92.07</td>
-            <td><strong>0.035</strong></td>
-            <td>90.98</td>
-            <td>88.72</td>
-            <td>92.38</td>
-            <td><ins>0.041</ins></td>
-        </tr>
-        <tr>
-            <td>MinerU2.5</td>
-            <td>1.2B</td>
-            <td>90.93</td>
-            <td>0.045</td>
-            <td>88.86</td>
-            <td>88.44</td>
-            <td>92.42</td>
-            <td>0.044</td>
-        </tr>
-        <tr>
-            <td>HunyuanOCR</td>
-            <td>1B</td>
-            <td>90.57</td>
-            <td>0.085</td>
-            <td>86.01</td>
-            <td><strong>94.19</strong></td>
-            <td>95.96</td>
-            <td>0.082</td>
-        </tr>
-        <tr>
-            <td>OpenDoc</td>
-            <td>0.1B</td>
-            <td>90.57</td>
-            <td>0.043</td>
-            <td>87.70</td>
-            <td>88.30</td>
-            <td>92.24</td>
-            <td>0.050</td>
-        </tr>
-        <tr>
-            <td>FD-RL</td>
-            <td>4B</td>
-            <td>90.20</td>
-            <td>0.053</td>
-            <td>88.52</td>
-            <td>87.43</td>
-            <td>92.19</td>
-            <td>0.063</td>
-        </tr>
-        <tr>
-            <td>DeepSeek-OCR-2</td>
-            <td>3B</td>
-            <td>89.17</td>
-            <td>0.049</td>
-            <td>86.85</td>
-            <td>85.60</td>
-            <td>90.06</td>
-            <td>0.060</td>
-        </tr>
-        <tr>
-            <td>MonkeyOCR-pro-3B</td>
-            <td>3B</td>
-            <td>88.85</td>
-            <td>0.075</td>
-            <td>87.25</td>
-            <td>86.78</td>
-            <td>90.63</td>
-            <td>0.128</td>
-        </tr>
-        <tr>
-            <td>Dolphin-v2</td>
-            <td>3B</td>
-            <td>88.71</td>
-            <td>0.073</td>
-            <td>87.26</td>
-            <td>86.20</td>
-            <td>89.77</td>
-            <td>0.064</td>
-        </tr>
-        <tr>
-            <td>OCRVerse</td>
-            <td>4B</td>
-            <td>88.55</td>
-            <td>0.058</td>
-            <td>86.91</td>
-            <td>84.55</td>
-            <td>88.45</td>
-            <td>0.071</td>
-        </tr>
-        <tr>
-            <td>dots.ocr</td>
-            <td>3B</td>
-            <td>88.41</td>
-            <td>0.048</td>
-            <td>83.22</td>
-            <td>86.78</td>
-            <td>90.62</td>
-            <td>0.053</td>
-        </tr>
-        <tr>
-            <td>MonkeyOCR-3B</td>
-            <td>3B</td>
-            <td>87.13</td>
-            <td>0.075</td>
-            <td>87.45</td>
-            <td>81.39</td>
-            <td>85.92</td>
-            <td>0.129</td>
-        </tr>
-        <tr>
-            <td>Deepseek-OCR</td>
-            <td>3B</td>
-            <td>87.01</td>
-            <td>0.073</td>
-            <td>83.37</td>
-            <td>84.97</td>
-            <td>88.80</td>
-            <td>0.086</td>
-        </tr>
-        <tr>
-            <td>MonkeyOCR-pro-1.2B</td>
-            <td>1.2B</td>
-            <td>86.96</td>
-            <td>0.084</td>
-            <td>85.02</td>
-            <td>84.24</td>
-            <td>89.02</td>
-            <td>0.130</td>
-        </tr>
-        <tr>
-            <td>Nanonets-OCR-s</td>
-            <td>3B</td>
-            <td>85.59</td>
-            <td>0.093</td>
-            <td>85.90</td>
-            <td>80.14</td>
-            <td>85.57</td>
-            <td>0.108</td>
-        </tr>
-        <tr>
-            <td>MinerU2-VLM</td>
-            <td>0.9B</td>
-            <td>85.56</td>
-            <td>0.078</td>
-            <td>80.95</td>
-            <td>83.54</td>
-            <td>87.66</td>
-            <td>0.086</td>
-        </tr>
-        <tr>
-            <td>Dolphin-1.5</td>
-            <td>0.3B</td>
-            <td>83.21</td>
-            <td>0.092</td>
-            <td>80.78</td>
-            <td>78.06</td>
-            <td>84.10</td>
-            <td>0.080</td>
-        </tr>
-        <tr>
-            <td>olmOCR</td>
-            <td>7B</td>
-            <td>81.79</td>
-            <td>0.096</td>
-            <td>86.04</td>
-            <td>68.92</td>
-            <td>74.77</td>
-            <td>0.121</td>
-        </tr>
-        <tr>
-            <td>POINTS-Reader</td>
-            <td>3B</td>
-            <td>80.98</td>
-            <td>0.134</td>
-            <td>79.20</td>
-            <td>77.13</td>
-            <td>81.66</td>
-            <td>0.145</td>
-        </tr>
-        <tr>
-            <td>Mistral OCR</td>
-            <td>-</td>
-            <td>78.83</td>
-            <td>0.164</td>
-            <td>82.84</td>
-            <td>70.03</td>
-            <td>78.04</td>
-            <td>0.144</td>
-        </tr>
-        <tr>
-            <td>OCRFlux</td>
-            <td>3B</td>
-            <td>74.82</td>
-            <td>0.193</td>
-            <td>68.03</td>
-            <td>75.75</td>
-            <td>80.23</td>
-            <td>0.202</td>
-        </tr>
-        <tr>
-            <td>Dolphin</td>
-            <td>0.3B</td>
-            <td>74.67</td>
-            <td>0.125</td>
-            <td>67.85</td>
-            <td>68.70</td>
-            <td>77.77</td>
-            <td>0.124</td>
-        </tr>
-        <tr>
-            <td rowspan="12"><strong>General</strong><br><strong>VLMs</strong></td>
-        <tr>
-            <td>Ovis2.6-30B-A3B</td>
-            <td>30B</td>
-            <td>92.36</td>
-            <td><ins>0.037</ins></td>
-            <td>90.32</td>
-            <td>90.46</td>
-            <td>94.00</td>
-            <td>0.046</td>
-        </tr>
-        <tr>
-            <td>Gemini-3 Flash</td>
-            <td>-</td>
-            <td>90.37</td>
-            <td>0.065</td>
-            <td>89.56</td>
-            <td>88.01</td>
-            <td>93.79</td>
-            <td>0.071</td>
-        </tr>
-        <tr>
-            <td>Gemini-3 Pro</td>
-            <td>-</td>
-            <td>90.17</td>
-            <td>0.062</td>
-            <td>88.79</td>
-            <td>87.83</td>
-            <td>93.32</td>
-            <td>0.074</td>
-        </tr>
-        <tr>
-            <td>Kimi K2.5</td>
-            <td>1T</td>
-            <td>89.33</td>
-            <td>0.065</td>
-            <td>86.92</td>
-            <td>87.57</td>
-            <td>91.82</td>
-            <td>0.084</td>
-        </tr>
-        <tr>
-            <td>Qwen3-VL-235B</td>
-            <td>235B</td>
-            <td>89.15</td>
-            <td>0.069</td>
-            <td>88.14</td>
-            <td>86.21</td>
-            <td>90.55</td>
-            <td>0.068</td>
-        </tr>
-        <tr>
-            <td>Gemini-2.5 Pro</td>
-            <td>-</td>
-            <td>88.03</td>
-            <td>0.075</td>
-            <td>85.82</td>
-            <td>85.71</td>
-            <td>90.29</td>
-            <td>0.097</td>
-        </tr>
-        <tr>
-            <td>Qwen2.5-VL</td>
-            <td>72B</td>
-            <td>87.02</td>
-            <td>0.094</td>
-            <td>88.27</td>
-            <td>82.15</td>
-            <td>86.22</td>
-            <td>0.102</td>
-        </tr>
-        <tr>
-            <td>GPT5.2</td>
-            <td>-</td>
-            <td>85.75</td>
-            <td>0.124</td>
-            <td>86.93</td>
-            <td>82.76</td>
-            <td>88.25</td>
-            <td>0.106</td>
-        </tr>
-        <tr>
-            <td>InternVL3.5</td>
-            <td>241B</td>
-            <td>82.67</td>
-            <td>0.142</td>
-            <td>87.23</td>
-            <td>75.00</td>
-            <td>81.28</td>
-            <td>0.125</td>
-        </tr>
-        <tr>
-            <td>InternVL3</td>
-            <td>78B</td>
-            <td>80.33</td>
-            <td>0.131</td>
-            <td>83.42</td>
-            <td>70.64</td>
-            <td>77.74</td>
-            <td>0.113</td>
-        </tr>
-        <tr>
-            <td>GPT-4o</td>
-            <td>-</td>
-            <td>75.02</td>
-            <td>0.217</td>
-            <td>79.70</td>
-            <td>67.07</td>
-            <td>76.09</td>
-            <td>0.148</td>
-        </tr>
-        <tr>
-            <td rowspan="5"><strong>Pipeline</strong><br><strong>Tools</strong></td>
-        <tr>
-            <td>PP-StructureV3</td>
-            <td>-</td>
-            <td>86.73</td>
-            <td>0.073</td>
-            <td>85.79</td>
-            <td>81.68</td>
-            <td>89.48</td>
-            <td>0.073</td>
-        </tr>
-        <tr>
-            <td>Mathpix</td>
-            <td>-</td>
-            <td>80.11</td>
-            <td>0.168</td>
-            <td>84.75</td>
-            <td>72.43</td>
-            <td>79.25</td>
-            <td>0.165</td>
-        </tr>
-        <tr>
-            <td>Mineru2-pipeline</td>
-            <td>-</td>
-            <td>75.51</td>
-            <td>0.209</td>
-            <td>76.55</td>
-            <td>70.90</td>
-            <td>79.11</td>
-            <td>0.225</td>
-        </tr>
-        <tr>
-            <td>Marker-1.8.2</td>
-            <td>-</td>
-            <td>71.30</td>
-            <td>0.206</td>
-            <td>76.66</td>
-            <td>57.88</td>
-            <td>71.17</td>
-            <td>0.250</td>
-        </tr>
-    </tbody>
+<table style="width: 92%; margin: auto; border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th rowspan="2">Method Type</th>
+      <th rowspan="2">Methods</th>
+      <th colspan="2">Text<sup>Edit</sup>↓</th>
+      <th colspan="2">Formula<sup>Edit</sup>↓</th>
+      <th colspan="2">Formula<sup>CDM</sup>↑</th>
+      <th colspan="2">Table<sup>TEDS</sup>↑</th>
+      <th colspan="2">Table<sup>Edit</sup>↓</th>
+      <th colspan="2">Read Order<sup>Edit</sup>↓</th>
+      <th colspan="2">Overall<sup>Edit</sup>↓</th>
+    </tr>
+    <tr>
+      <th>EN</th>
+      <th>ZH</th>
+      <th>EN</th>
+      <th>ZH</th>
+      <th>EN</th>
+      <th>ZH</th>
+      <th>EN</th>
+      <th>ZH</th>
+      <th>EN</th>
+      <th>ZH</th>
+      <th>EN</th>
+      <th>ZH</th>
+      <th>EN</th>
+      <th>ZH</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="4">Pipeline Tools</td>
+      <td>MinerU-0.9.3</td>
+      <td><strong>0.061</strong></td>
+      <td><strong>0.211</strong></td>
+      <td><strong>0.278</strong></td>
+      <td>0.577</td>
+      <td>66.9</td>
+      <td>49.5</td>
+      <td><strong>78.6</strong></td>
+      <td>62.1</td>
+      <td><strong>0.180</strong></td>
+      <td>0.344</td>
+      <td><strong>0.079</strong></td>
+      <td>0.288</td>
+      <td><strong>0.150</strong></td>
+      <td><u>0.355</u></td>
+    </tr>
+    <tr>
+      <td>Marker-1.2.3</td>
+      <td><u>0.080</u></td>
+      <td>0.315</td>
+      <td>0.530</td>
+      <td>0.883</td>
+      <td>20.1</td>
+      <td>16.8</td>
+      <td>67.6</td>
+      <td>49.2</td>
+      <td>0.619</td>
+      <td>0.685</td>
+      <td>0.114</td>
+      <td>0.340</td>
+      <td>0.336</td>
+      <td>0.556</td>
+    </tr>
+    <tr>
+      <td>Mathpix</td>
+      <td>0.101</td>
+      <td>0.358</td>
+      <td><u>0.306</u></td>
+      <td><strong>0.454</strong></td>
+      <td>71.4</td>
+      <td><strong>72.7</strong></td>
+      <td><u>77.0</u></td>
+      <td><strong>67.1</strong></td>
+      <td>0.243</td>
+      <td><strong>0.320</strong></td>
+      <td><u>0.105</u></td>
+      <td>0.275</td>
+      <td><u>0.189</u></td>
+      <td><strong>0.352</strong></td>
+    </tr>
+    <tr>
+      <td>Docling</td>
+      <td>0.416</td>
+      <td>0.987</td>
+      <td>0.999</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>61.3</td>
+      <td>25.0</td>
+      <td>0.627</td>
+      <td>0.810</td>
+      <td>0.313</td>
+      <td>0.837</td>
+      <td>0.589</td>
+      <td>0.909</td>
+    </tr>
+    <tr>
+      <td rowspan="2">Expert VLMs</td>
+      <td>GOT-OCR</td>
+      <td>0.191</td>
+      <td>0.315</td>
+      <td>0.360</td>
+      <td><u>0.528</u></td>
+      <td><strong>81.8</strong></td>
+      <td>51.4</td>
+      <td>53.2</td>
+      <td>47.2</td>
+      <td>0.459</td>
+      <td>0.520</td>
+      <td>0.143</td>
+      <td>0.280</td>
+      <td>0.289</td>
+      <td>0.411</td>
+    </tr>
+    <tr>
+      <td>Nougat</td>
+      <td>0.367</td>
+      <td>0.998</td>
+      <td>0.488</td>
+      <td>0.941</td>
+      <td>17.4</td>
+      <td>16.9</td>
+      <td>39.9</td>
+      <td>0</td>
+      <td>0.572</td>
+      <td>1</td>
+      <td>0.384</td>
+      <td>0.954</td>
+      <td>0.453</td>
+      <td>0.973</td>
+    </tr>
+    <tr>
+      <td rowspan="3">General VLMs</td>
+      <td>GPT4o</td>
+      <td>0.146</td>
+      <td>0.409</td>
+      <td>0.425</td>
+      <td>0.606</td>
+      <td><u>76.4</u></td>
+      <td>48.2</td>
+      <td>72.0</td>
+      <td>62.9</td>
+      <td><u>0.234</u></td>
+      <td><u>0.329</u></td>
+      <td>0.128</td>
+      <td>0.251</td>
+      <td>0.233</td>
+      <td>0.399</td>
+    </tr>
+    <tr>
+      <td>Qwen2-VL-72B</td>
+      <td>0.253</td>
+      <td><u>0.251</u></td>
+      <td>0.468</td>
+      <td>0.572</td>
+      <td>54.9</td>
+      <td><u>60.9</u></td>
+      <td>59.5</td>
+      <td><u>66.4</u></td>
+      <td>0.551</td>
+      <td>0.518</td>
+      <td>0.254</td>
+      <td><strong>0.223</strong></td>
+      <td>0.381</td>
+      <td>0.391</td>
+    </tr>
+    <tr>
+      <td>InternVL2-76B</td>
+      <td>0.353</td>
+      <td>0.29</td>
+      <td>0.543</td>
+      <td>0.701</td>
+      <td>69.8</td>
+      <td>49.6</td>
+      <td>63.0</td>
+      <td>60.2</td>
+      <td>0.547</td>
+      <td>0.555</td>
+      <td>0.317</td>
+      <td><u>0.228</u></td>
+      <td>0.440</td>
+      <td>0.443</td>
+    </tr>
+  </tbody>
 </table>
+<p style="text-align: center; margin-top: -4pt;">
+  Comprehensive evaluation of document parsing algorithms on OmniDocBench: performance metrics for text, formula, table, and reading order extraction, with overall scores derived from ground truth comparisons.
+</p>
 
 
-更多分属性评测结果在论文中展示。或者你可以使用[tools/generate_result_tables.ipynb](./tools/generate_result_tables.ipynb)来生成结果的leaderboard。
+更多分属性评测结果在论文中展示。
 
 #### 端到端评测方法-end2end
 
@@ -860,7 +654,7 @@ $$\text{Overall} = \frac{(1-\textit{Text Edit Distance}) \times 100 + \textit{Ta
 - 阅读顺序
 
 <details>
-  <summary>【end2end.yaml的字段解释】</summary>
+  <summary>end2end.yaml的字段解释</summary>
 
 `end2end.yaml`的配置如下：
 
@@ -896,12 +690,12 @@ end2end_eval:          # 指定task名称，端到端评测通用该task
 
 `prediction`下的`data_path`输入的是模型对PDF页面解析结果的文件夹路径，路径中保存的是每个页面对应的markdown，文件名与图片名保持一致，仅将.jpg后缀替换成.md。
 
-目前[CDM](https://github.com/opendatalab/UniMERNet/tree/main/cdm)已支持直接评测，需要根据[README](./metrics/cdm/README-CN.md)配置CDM环境后使用，并且在config文件中直接调用`CDM`。除此之外，仍然保留了之前导出CDM评测所需的格式的JSON文件，只需要在metric中配置`CDM_plain`字段，即可将输出整理为CDM的输入格式，并存储在[result](./result)中。
+除了已支持的metric以外，还支持导出[CDM](https://github.com/opendatalab/UniMERNet/tree/main/cdm)评测所需的格式，只需要在metric中配置CDM字段，即可将输出整理为CDM的输入格式，并存储在[result](./result)中。
 
 在端到端的评测中，config里可以选择配置不同的匹配方式，一共有三种匹配方式：
 - `no_split`: 不对text block做拆分和匹配的操作，而是直接合并成一整个markdown进行计算，这种方式下，将不会输出分属性的结果，也不会输出阅读顺序的结果；
 - `simple_match`: 不进行任何截断合并操作，仅对文本做双换行的段落分割后，直接与GT进行一对一匹配；
-- `quick_match`：在段落分割的基础上，加上截断合并的操作，减少段落分割差异对最终结果的影响，通过*Adjacency Search Match*的方式进行截断合并；目前v1.5版本在评测方法上已全面升级为**混合匹配**的方法，允许公式和文本进行匹配，减少了模型输出公式为unicode格式造成的分数影响；
+- `quick_match`：在段落分割的基础上，加上截断合并的操作，减少段落分割差异对最终结果的影响，通过*Adjacency Search Match*的方式进行截断合并；
 
 我们推荐使用`quick_match`的方式以达到较好的匹配效果，但如果模型输出的段落分割较准确，也可以使用`simple_match`的方式，评测运行会更加迅速。匹配方法通过`config`中的`dataset`字段下的`match_method`字段进行配置。
 
@@ -921,7 +715,7 @@ markdown-to-markdown评测以模型输出的对整个PDF页面解析结果的Mar
 - 阅读顺序
 
 <details>
-  <summary>【md2md.yaml的字段解释】</summary>
+  <summary>md2md.yaml的字段解释</summary>
 
 `md2md.yaml`的配置如下：
 
@@ -988,7 +782,7 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息以及对应的�
     </tr>
     <tr>
       <td>Mathpix</td>
-      <td><ins>86.6</ins></td>
+      <td><u>86.6</u></td>
       <td>2.8</td>
       <td><b>66.56</b></td>
       <td>0.322</td>
@@ -1003,8 +797,8 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息以及对应的�
     <tr>
       <td>UniMERNet-B</td>
       <td>85.0</td>
-      <td><ins>60.2</ins></td>
-      <td><ins>60.84</ins></td>
+      <td><u>60.2</u></td>
+      <td><u>60.84</u></td>
       <td><b>0.238</b></td>
     </tr>
     <tr>
@@ -1012,7 +806,7 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息以及对应的�
       <td><b>86.8</b></td>
       <td><b>65.5</b></td>
       <td>45.17</td>
-      <td><ins>0.282</ins></td>
+      <td><u>0.282</u></td>
     </tr>
     <tr>
       <td>InternVL2-Llama3-76B</td>
@@ -1036,7 +830,7 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息以及对应的�
 公式识别评测可以参考[formula_recognition](./configs/formula_recognition.yaml)进行配置。 
 
 <details>
-  <summary>【formula_recognition.yaml的字段解释】</summary>
+  <summary>formula_recognition.yaml的字段解释</summary>
 
 `formula_recognition.yaml`的配置文件如下：
 
@@ -1162,31 +956,31 @@ OmniDocBench包含每个PDF页面的所有文字的bounding box信息以及对�
   </thead>
   <tbody>
     <tr>
-      <td rowspan="7" style="text-align: center;">Pipeline Tools<br>&<br>Expert Vision<br>Models</td>
+      <td rowspan="7" style="text-align: center;"><strong>Pipeline Tools<br>&<br>Expert Vision<br>Models</strong></td>
       <td>PaddleOCR</td>
       <td>0.071</td>
-      <td><b>0.055</b></td>
-      <td><ins>0.118</ins></td>
-      <td><b>0.060</b></td>
-      <td><b>0.038</b></td>
-      <td><ins>0.085</ins></td>
-      <td><b>0.060</b></td>
-      <td><b>0.015</b></td>
-      <td><ins>0.285</ins></td>
-      <td><b>0.021</b></td>
+      <td><strong>0.055</strong></td>
+      <td><u>0.118</u></td>
+      <td><strong>0.060</strong></td>
+      <td><strong>0.038</strong></td>
+      <td><u>0.085</u></td>
+      <td><strong>0.060</strong></td>
+      <td><strong>0.015</strong></td>
+      <td><u>0.285</u></td>
+      <td><strong>0.021</strong></td>
     </tr>
     <tr>
       <td>OpenOCR</td>
       <td>0.07</td>
-      <td><ins>0.068</ins></td>
-      <td><b>0.106</b></td>
-      <td><ins>0.069</ins></td>
+      <td><u>0.068</u></td>
+      <td><strong>0.106</strong></td>
+      <td><u>0.069</u></td>
       <td>0.058</td>
-      <td><b>0.081</b></td>
-      <td><ins>0.069</ins></td>
-      <td><ins>0.038</ins></td>
+      <td><strong>0.081</strong></td>
+      <td><u>0.069</u></td>
+      <td><u>0.038</u></td>
       <td>0.891</td>
-      <td><ins>0.025</ins></td>
+      <td><u>0.025</u></td>
     </tr>
     <tr>
       <td>Tesseract-OCR</td>
@@ -1229,15 +1023,15 @@ OmniDocBench包含每个PDF页面的所有文字的bounding box信息以及对�
     </tr>
     <tr>
       <td>Mathpix</td>
-      <td><ins>0.033</ins></td>
+      <td><u>0.033</u></td>
       <td>0.240</td>
       <td>0.261</td>
       <td>0.185</td>
       <td>0.121</td>
       <td>0.166</td>
       <td>0.180</td>
-      <td><ins>0.038</ins></td>
-      <td><b>0.185</b></td>
+      <td><u>0.038</u></td>
+      <td><strong>0.185</strong></td>
       <td>0.638</td>
     </tr>
     <tr>
@@ -1246,7 +1040,7 @@ OmniDocBench包含每个PDF页面的所有文字的bounding box信息以及对�
       <td>0.112</td>
       <td>0.135</td>
       <td>0.092</td>
-      <td><ins>0.052</ins></td>
+      <td><u>0.052</u></td>
       <td>0.155</td>
       <td>0.091</td>
       <td>0.562</td>
@@ -1254,7 +1048,7 @@ OmniDocBench包含每个PDF页面的所有文字的bounding box信息以及对�
       <td>0.097</td>
     </tr>
     <tr>
-      <td rowspan="3" style="text-align: center;">Vision Language<br>Models</td>
+      <td rowspan="3" style="text-align: center;"><strong>Vision Language<br>Models</strong></td>
       <td>Qwen2-VL-72B</td>
       <td>0.072</td>
       <td>0.274</td>
@@ -1282,9 +1076,9 @@ OmniDocBench包含每个PDF页面的所有文字的bounding box信息以及对�
     </tr>
     <tr>
       <td>GPT4o</td>
-      <td><b>0.020</b></td>
+      <td><strong>0.020</strong></td>
       <td>0.224</td>
-      <td>0.125</td>
+      <td><u>0.125</u></td>
       <td>0.167</td>
       <td>0.140</td>
       <td>0.220</td>
@@ -1295,13 +1089,12 @@ OmniDocBench包含每个PDF页面的所有文字的bounding box信息以及对�
     </tr>
   </tbody>
 </table>
-<p>Component-level OCR text recognition evaluation on OmniDocBench (v1.0) text subset.</p>
 
 
 文字OCR评测可以参考[ocr](./configs/ocr.yaml)进行配置。 
 
 <details>
-  <summary>【ocr.yaml的字段解释】</summary>
+  <summary>ocr.yaml的字段解释</summary>
 
 `ocr.yaml`的配置文件如下：
 
@@ -1399,58 +1192,58 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息以及对应的�
   </thead>
   <tbody>
     <tr>
-      <td rowspan="2" style="text-align: center;">OCR-based Models</td>
+      <td rowspan="2" style="text-align: center;"><strong>OCR-based Models</strong></td>
       <td>PaddleOCR</td>
-      <td><ins>76.8</ins></td>
+      <td><u>76.8</u></td>
       <td>71.8</td>
       <td>80.1</td>
       <td>67.9</td>
       <td>74.3</td>
-      <td><ins>81.1</ins></td>
+      <td><u>81.1</u></td>
       <td>74.5</td>
-      <td><ins>70.6/75.2</ins></td>
-      <td><ins>71.3/74.1</ins></td>
-      <td><ins>72.7/74.0</ins></td>
+      <td><u>70.6/75.2</u></td>
+      <td><u>71.3/74.1</u></td>
+      <td>72.7/74.0</td>
       <td>23.3/74.6</td>
       <td>73.6</td>
     </tr>
     <tr>
       <td>RapidTable</td>
-      <td><b>80.0</b></td>
-      <td><b>83.2</b></td>
-      <td><b>91.2</b></td>
-      <td><b>83.0</b></td>
-      <td><b>79.7</b></td>
-      <td><b>83.4</b></td>
+      <td><strong>80.0</strong></td>
+      <td><strong>83.2</strong></td>
+      <td><strong>91.2</strong></td>
+      <td><strong>83.0</strong></td>
+      <td><strong>79.7</strong></td>
+      <td><strong>83.4</strong></td>
       <td>78.4</td>
-      <td><b>77.1/85.4</b></td>
-      <td><b>76.7/83.9</b></td>
-      <td><b>77.6/84.9</b></td>
-      <td><ins>25.2/83.7</ins></td>
-      <td><b>82.5</b></td>
+      <td><strong>77.1/85.4</strong></td>
+      <td><strong>76.7/83.9</strong></td>
+      <td><strong>77.6/84.9</strong></td>
+      <td><u>25.2/83.7</u></td>
+      <td><strong>82.5</strong></td>
     </tr>
     <tr>
-      <td rowspan="2" style="text-align: center;">Expert VLMs</td>
+      <td rowspan="2" style="text-align: center;"><strong>Expert VLMs</strong></td>
       <td>StructEqTable</td>
       <td>72.8</td>
-      <td><ins>75.9</ins></td>
+      <td><u>75.9</u></td>
       <td>83.4</td>
       <td>72.9</td>
-      <td><ins>76.2</ins></td>
+      <td><u>76.2</u></td>
       <td>76.9</td>
-      <td><b>88</b></td>
+      <td><strong>88</strong></td>
       <td>64.5/81</td>
       <td>69.2/76.6</td>
-      <td>72.8/76.4</td>
-      <td><b>30.5/76.2</b></td>
-      <td><ins>75.8</ins></td>
+      <td><u>72.8/76.4</u></td>
+      <td><strong>30.5/76.2</strong></td>
+      <td><u>75.8</u></td>
     </tr>
     <tr>
       <td>GOT-OCR</td>
       <td>72.2</td>
       <td>75.5</td>
-      <td><ins>85.4</ins></td>
-      <td><ins>73.1</ins></td>
+      <td><u>85.4</u></td>
+      <td><u>73.1</u></td>
       <td>72.7</td>
       <td>78.2</td>
       <td>75.7</td>
@@ -1461,7 +1254,7 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息以及对应的�
       <td>74.9</td>
     </tr>
     <tr>
-      <td rowspan="2" style="text-align: center;">General VLMs</td>
+      <td rowspan="2" style="text-align: center;"><strong>General VLMs</strong></td>
       <td>Qwen2-VL-7B</td>
       <td>70.2</td>
       <td>70.7</td>
@@ -1469,7 +1262,7 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息以及对应的�
       <td>70.2</td>
       <td>62.8</td>
       <td>74.5</td>
-      <td><ins>80.3</ins></td>
+      <td><u>80.3</u></td>
       <td>60.8/76.5</td>
       <td>63.8/72.6</td>
       <td>71.4/70.8</td>
@@ -1493,7 +1286,7 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息以及对应的�
     </tr>
   </tbody>
 </table>
-<p>Component-level Table Recognition evaluation on OmniDocBench (v1.0) table subset. <i>(+/-)</i> means <i>with/without</i> special situation.</p>
+<p>Component-level Table Recognition evaluation on OmniDocBench table subset. <i>(+/-)</i> means <i>with/without</i> special situation.</p>
 
 
 表格识别评测可以参考[table_recognition](./configs/table_recognition.yaml)进行配置。 
@@ -1501,7 +1294,7 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息以及对应的�
 **对于模型预测为LaTex格式的表格, 会使用[latexml](https://math.nist.gov/~BMiller/LaTeXML/)工具将latex转为html 再进行评测. 评测代码会自动进行格式转换,需要用户预先安装[latexml](https://math.nist.gov/~BMiller/LaTeXML/)**
 
 <details>
-  <summary>【table_recognition.yaml的字段解释】</summary>
+  <summary>table_recognition.yaml的字段解释</summary>
 
 `table_recognition.yaml`的配置文件如下：
 
@@ -1603,125 +1396,84 @@ with open('./demo_data/recognition/OmniDocBench_demo_table.json', 'w', encoding=
 
 OmniDocBench包含每个PDF页面的所有文档组件的bounding box信息，因此可以作为Layout检测任务评测的benchmark。
 
-<table style="width: 95%; margin: auto; border-collapse: collapse;">
+<table style="width: 90%; margin: auto; border-collapse: collapse;">
+  <caption>Component-level layout detection evaluation on OmniDocBench layout subset: mAP results by PDF page type.</caption>
   <thead>
     <tr>
-      <th>Model</th>
-      <th>Backbone</th>
-      <th>Params</th>
-      <th>Book</th>
-      <th>Slides</th>
-      <th>Research<br>Report</th>
-      <th>Textbook</th>
-      <th>Exam<br>Paper</th>
-      <th>Magazine</th>
-      <th>Academic<br>Literature</th>
-      <th>Notes</th>
-      <th>Newspaper</th>
-      <th>Average</th>
+      <th style="border-bottom: 2px solid black;">Model</th>
+      <th style="border-bottom: 2px solid black;">Book</th>
+      <th style="border-bottom: 2px solid black;">Slides</th>
+      <th style="border-bottom: 2px solid black;">Research Report</th>
+      <th style="border-bottom: 2px solid black;">Textbook</th>
+      <th style="border-bottom: 2px solid black;">Exam Paper</th>
+      <th style="border-bottom: 2px solid black;">Magazine</th>
+      <th style="border-bottom: 2px solid black;">Academic Literature</th>
+      <th style="border-bottom: 2px solid black;">Notes</th>
+      <th style="border-bottom: 2px solid black;">Newspaper</th>
+      <th style="border-bottom: 2px solid black;">Average mAP</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>DiT-L</sup></td>
-      <td>ViT-L</td>
-      <td>361.6M</td>
-      <td><ins>43.44</ins></td>
-      <td>13.72</td>
-      <td>45.85</td>
-      <td>15.45</td>
-      <td>3.40</td>
-      <td>29.23</td>
-      <td><strong>66.13</strong></td>
-      <td>0.21</td>
-      <td>23.65</td>
-      <td>26.90</td>
+      <td style="border-top: 1px solid black;">DiT-L</td>
+      <td style="border-top: 1px solid black; text-decoration: underline;">43.44</td>
+      <td style="border-top: 1px solid black; text-decoration: underline;">13.72</td>
+      <td style="border-top: 1px solid black; text-decoration: underline;">45.85</td>
+      <td style="border-top: 1px solid black;">15.45</td>
+      <td style="border-top: 1px solid black;">3.40</td>
+      <td style="border-top: 1px solid black; text-decoration: underline;">29.23</td>
+      <td style="border-top: 1px solid black; text-decoration: underline;">66.13</td>
+      <td style="border-top: 1px solid black;">0.21</td>
+      <td style="border-top: 1px solid black;">23.65</td>
+      <td style="border-top: 1px solid black;">26.90</td>
     </tr>
     <tr>
-      <td>LayoutLMv3</sup></td>
-      <td>RoBERTa-B</td>
-      <td>138.4M</td>
+      <td>LayoutLMv3</td>
       <td>42.12</td>
       <td>13.63</td>
       <td>43.22</td>
-      <td>21.00</td>
+      <td style="text-decoration: underline;">21.00</td>
       <td>5.48</td>
       <td>31.81</td>
-      <td><ins>64.66</ins></td>
+      <td>64.66</td>
       <td>0.80</td>
-      <td>30.84</td>
-      <td>28.84</td>
+      <td style="text-decoration: underline;">30.84</td>
+      <td style="text-decoration: underline;">28.84</td>
     </tr>
     <tr>
-      <td>DocLayout-YOLO</sup></td>
-      <td>v10m</td>
-      <td>19.6M</td>
-      <td><strong>43.71</strong></td>
-      <td><strong>48.71</strong></td>
-      <td><strong>72.83</strong></td>
-      <td><strong>42.67</strong></td>
-      <td><strong>35.40</strong></td>
-      <td><ins>51.44</ins></td>
-      <td><ins>64.64</ins></td>
-      <td><ins>9.54</ins></td>
-      <td><strong>57.54</strong></td>
-      <td><strong>47.38</strong></td>
-    </tr>
-    <tr>
-      <td>SwinDocSegmenter</sup></td>
-      <td>Swin-L</td>
-      <td>223M</td>
-      <td>42.91</td>
-      <td><ins>28.20</ins></td>
-      <td><ins>47.29</ins></td>
-      <td><ins>32.44</ins></td>
-      <td><ins>20.81</ins></td>
-      <td><strong>52.35</strong></td>
-      <td>48.54</td>
-      <td><strong>12.38</strong></td>
-      <td><ins>38.06</ins></td>
-      <td><ins>35.89</ins></td>
-    </tr>
-    <tr>
-      <td>GraphKD</sup></td>
-      <td>R101</td>
-      <td>44.5M</td>
-      <td>39.03</td>
-      <td>16.18</td>
-      <td>39.92</td>
-      <td>22.82</td>
-      <td>14.31</td>
-      <td>37.61</td>
-      <td>44.43</td>
-      <td>5.71</td>
-      <td>23.86</td>
-      <td>27.10</td>
-    </tr>
-    <tr>
-      <td>DOCX-Chain</sup></td>
-      <td>-</td>
-      <td>-</td>
+      <td>DOCX-Chain</td>
       <td>30.86</td>
       <td>11.71</td>
       <td>39.62</td>
-      <td>19.23</td>
-      <td>10.67</td>
+      <td style="text-decoration: underline;">19.23</td>
+      <td style="text-decoration: underline;">10.67</td>
       <td>23.00</td>
       <td>41.60</td>
-      <td>1.80</td>
+      <td style="text-decoration: underline;">1.80</td>
       <td>16.96</td>
       <td>21.27</td>
     </tr>
+    <tr>
+      <td style="font-weight: bold;">DocLayout-YOLO</td>
+      <td style="font-weight: bold;">43.71</td>
+      <td style="font-weight: bold;">48.71</td>
+      <td style="font-weight: bold;">72.83</td>
+      <td style="font-weight: bold;">42.67</td>
+      <td style="font-weight: bold;">35.40</td>
+      <td style="font-weight: bold;">51.44</td>
+      <td style="font-weight: bold;">66.84</td>
+      <td style="font-weight: bold;">9.54</td>
+      <td style="font-weight: bold;">57.54</td>
+      <td style="font-weight: bold;">48.71</td>
+    </tr>
   </tbody>
 </table>
-
-<p>Component-level layout detection evaluation on OmniDocBench (v1.0) layout subset: mAP results by PDF page type.</p>
 
 
 Layout检测config文件参考[layout_detection](./configs/layout_detection.yaml)，数据格式参考[detection_prediction](./demo_data/detection/detection_prediction.json)。
 
 <details>
-  <summary>【layout_detection.yaml的字段解释】</summary>
+  <summary>layout_detection.yaml的字段解释</summary>
 
 以下我们以精简格式为例进行展示。`layout_detection.yaml`的配置文件如下：
 
@@ -1807,7 +1559,7 @@ OmniDocBench包含每个PDF页面的公式的bounding box信息，因此可以�
 公式检测与Layout检测的格式基本一致。公式包含行内公式和行间公式。在本节提供一个config样例，可以同时评测行间公式和行内公式的检测结果。公式检测可以参考[formula_detection](./configs/formula_detection.yaml)进行配置。
 
 <details>
-  <summary>【formula_detection.yaml的字段解释】</summary>
+  <summary>formula_detection.yaml的字段解释</summary>
 
 `formula_detection.yaml`的配置文件如下：
 
@@ -1841,20 +1593,19 @@ config中参数解释以及数据集格式请参考`Layout检测`小节，公式
 
 </details>
 
-## 工具
+## Tools
 
 我们在`tools`目录下提供了一些工具：
 - [json2md](./tools/json2md.py) 用于将JSON格式的OmniDocBench转换为Markdown格式；
 - [visualization](./tools/visualization.py) 用于可视化OmniDocBench的JSON文件；
-- [generate_result_tables](./tools/generate_result_tables.py) 可用于整理模型结果榜单;
 - [model_infer](./tools/model_infer)文件夹下提供了一些模型推理的脚本供参考，请在配置了模型环境后使用，包括：
   - `<model_name>_img2md.py` 用于调用模型将图片转换为Markdown格式；
   - `<model_name>_ocr.py` 用于调用模型对block级别的文档文本段落进行文本识别；
   - `<model_name>_formula.py`用于调用模型对行间公式进行公式识别；
 
-## 评测模型信息
+## The Evaluation Model Information
 
-### End2End
+### end2end
 <table>
   <thead>
     <tr>
@@ -1867,279 +1618,50 @@ config中参数解释以及数据集格式请参考`Layout检测`小节，公式
     <tr>
       <td>MinerU</td>
       <td><a href="https://mineru.org.cn/">MinerU</a></td>
-      <td>2.1.1</td>
-    </tr>
-    <tr>
-      <td>MinerU2-VLM</td>
-      <td><a href="https://github.com/opendatalab/MinerU">MinerU</a></td>
-      <td><a href="https://huggingface.co/opendatalab/MinerU2.0-2505-0.9B">HuggingFace MinerU2.0-2505-0.9B</a></td>
-    </tr>
-    <tr>
-      <td>MinerU2.5</td>
-      <td><a href="https://github.com/opendatalab/MinerU">MinerU</a></td>
-      <td><a href="https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B">HuggingFace MinerU2.5-2509-1.2B</a></td>
-    </tr>
-    <tr>
-      <td>GLM-OCR</td>
-      <td><a href="https://github.com/zai-org/GLM-OCR">GLM-OCR</a></td>
-      <td><a href="https://huggingface.co/zai-org/GLM-OCR">HuggingFace GLM-OCR</a></td>
-    </tr>
-    <tr>
-      <td>Youtu-Parsing</td>
-      <td><a href="https://github.com/TencentCloudADP/youtu-parsing">Youtu-Parsing</a></td>
-      <td><a href="https://huggingface.co/tencent/Youtu-Parsing">HuggingFace Youtu-Parsing</a></td>
-    </tr>
-    <tr>
-      <td>FireRed-OCR</td>
-      <td><a href="https://github.com/FireRedTeam/FireRed-OCR">FireRed-OCR</a></td>
-      <td><a href="https://huggingface.co/FireRedTeam/FireRed-OCR">HuggingFace FireRed-OCR</a></td>
-    </tr>
-    <tr>
-      <td>dots.ocr</td>
-      <td><a href="https://github.com/rednote-hilab/dots.ocr">dots.ocr</a></td>
-      <td><a href="https://huggingface.co/rednote-hilab/dots.ocr">HuggingFace dots.ocr</a></td>
-    </tr>
-    <tr>
-      <td>Logics-Parsing-v2</td>
-      <td><a href="https://github.com/alibaba/Logics-Parsing">Logics-Parsing</a></td>
-      <td><a href="https://huggingface.co/Logics-MLLM/Logics-Parsing-v2">HuggingFace Logics-Parsing-v2</a></td>
-    </tr>
-    <tr>
-      <td>Ovis2.6-30B-A3B</td>
-      <td><a href="https://github.com/AIDC-AI/Ovis">Ovis</a></td>
-      <td><a href="https://huggingface.co/AIDC-AI/Ovis2.6-30B-A3B">HuggingFace Ovis2.6-30B-A3B</a></td>
-    </tr>
-    <tr>
-      <td>HunyuanOCR</td>
-      <td><a href="https://hunyuan.tencent.com/vision/zh?tabIndex=0">HunyuanOCR</a></td>
-      <td><a href="https://huggingface.co/tencent/HunyuanOCR">HuggingFace HunyuanOCR</a></td>
-    </tr>
-    <tr>
-      <td>POINTS-Reader</td>
-      <td><a href="https://github.com/Tencent/POINTS-Reader">POINTS-Reader</a></td>
-      <td><a href="https://huggingface.co/tencent/POINTS-Reader">HuggingFace POINTS-Reader</a></td>
+      <td>0.9.3</td>
     </tr>
     <tr>
       <td>Marker</td>
       <td><a href="https://github.com/VikParuchuri/marker">Marker</a></td>
-      <td>1.8.2</td>
+      <td>1.2.3</td>
     </tr>
     <tr>
       <td>Mathpix</td>
       <td><a href="https://mathpix.com/">Mathpix</a></td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td>PaddleOCR PP-StructureV3</td>
-      <td><a href="https://github.com/PaddlePaddle/PaddleOCR">PaddleOCR</a></td>
-      <td><a href="https://www.paddleocr.ai/latest/version3.x/pipeline_usage/PP-StructureV3.html">PP-StructureV3</a></td>
-    </tr>
-    <tr>
-      <td>PaddleOCR-VL</td>
-      <td><a href="https://github.com/PaddlePaddle/PaddleOCR">PaddleOCR</a></td>
-      <td><a href="https://huggingface.co/PaddlePaddle/PaddleOCR-VL">Hugging Face PaddleOCR-VL</a></td>
-    </tr>
-    <tr>
-      <td>PaddleOCR-VL-1.5</td>
-      <td><a href="https://github.com/PaddlePaddle/PaddleOCR">PaddleOCR</a></td>
-      <td><a href="https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.5">Hugging Face PaddleOCR-VL-1.5</a></td>
-    </tr>
-    <tr>
-      <td>FD-RL</td>
-      <td><a href="https://github.com/DocTron-hub/FD-RL">FD-RL</a></td>
-      <td><a href="https://huggingface.co/DocTron/FD-RL">Hugging Face FD-RL</a></td>
+      <td>———</td>
     </tr>
     <tr>
       <td>Docling</td>
-      <td><a href="https://www.docling.ai/">Docling</a></td>
-      <td><a href="https://huggingface.co/docling-project/docling-layout-heron">Hugging Face docling-layout-heron</a></td>
-    </tr>
-    <tr>
-      <td>OpenDoc-0.1B</td>
-      <td><a href="https://github.com/Topdu/OpenOCR/blob/main/docs/opendoc.md">OpenDoc</a></td>
-      <td><a href="https://huggingface.co/spaces/topdu/OpenDoc-0.1B-Demo">Hugging Face OpenDoc-0.1B</a></td>
-    </tr>
-    <tr>
-      <td>Pix2Text</td>
-      <td><a href="https://github.com/breezedeus/Pix2Text">Pix2Text</a></td>
-      <td>1.1.2.3</td>
-    </tr>
-    <tr>
-      <td>Unstructured</td>
-      <td><a href="https://github.com/Unstructured-IO/unstructured">Unstructured</a></td>
-      <td>0.16.23</td>
-    </tr>
-    <tr>
-      <td>OpenParse</td>
-      <td><a href="https://github.com/Filimoa/open-parse">OpenParse</a></td>
-      <td>0.7.0</td>
-    </tr>
-    <tr>
-      <td>MonkeyOCR-pro-1.2B</td>
-      <td><a href="https://github.com/Yuliang-Liu/MonkeyOCR">MonkeyOCR</a></td>
-      <td><a href="https://huggingface.co/echo840/MonkeyOCR-pro-1.2B">HuggingFace MonkeyOCR-pro-1.2B</a></td>
-    </tr>
-    <tr>
-      <td>MonkeyOCR-pro-3B</td>
-      <td><a href="https://github.com/Yuliang-Liu/MonkeyOCR">MonkeyOCR</a></td>
-      <td><a href="https://huggingface.co/echo840/MonkeyOCR-pro-3B">HuggingFace MonkeyOCR-pro-3B</a></td>
-    </tr>
-    <tr>
-      <td>MonkeyOCR-3B</td>
-      <td><a href="https://github.com/Yuliang-Liu/MonkeyOCR">MonkeyOCR</a></td>
-      <td><a href="https://huggingface.co/echo840/MonkeyOCR">HuggingFace MonkeyOCR-3B</a></td>
-    </tr>
-    <tr>
-      <td>Dolphin</td>
-      <td><a href="https://github.com/bytedance/Dolphin">Dolphin</a></td>
-      <td><a href="https://huggingface.co/ByteDance/Dolphin">HuggingFace Dolphin</a></td>
-    </tr>
-    <tr>
-      <td>Dolphin-1.5</td>
-      <td><a href="https://github.com/bytedance/Dolphin">Dolphin</a></td>
-      <td><a href="https://huggingface.co/ByteDance/Dolphin-1.5">Hugging Face Dolphin-1.5</a></td>
-    </tr>
-    <tr>
-      <td>Dolphin-v2</td>
-      <td><a href="https://github.com/bytedance/Dolphin">Dolphin</a></td>
-      <td><a href="https://huggingface.co/ByteDance/Dolphin-v2">Hugging Face Dolphin-v2</a></td>
-    </tr>
-    <tr>
-      <td>Nanonets-OCR-s</td>
-      <td><a href="https://nanonets.com/research/nanonets-ocr-s/">Nanonets-OCR-s</a></td>
-      <td><a href="https://huggingface.co/nanonets/Nanonets-OCR-s">HuggingFace Nanonets-OCR-s</a></td>
-    </tr>
-    <tr>
-      <td>OCRFlux</td>
-      <td><a href="https://github.com/chatdoc-com/OCRFlux">OCRFlux</a></td>
-      <td><a href="https://huggingface.co/ChatDOC/OCRFlux-3B">HuggingFace OCRFlux-3B</a></td>
-    </tr>
-    <tr>
-      <td>Mistral OCR</td>
-      <td><a href="https://mistral.ai/news/mistral-ocr?utm_source=ai-bot.cn">Mistral OCR</a></td>
-      <td>2503</td>
+      <td><a href="https://ds4sd.github.io/docling/">Docling</a></td>
+      <td>2.14.0</td>
     </tr>
     <tr>
       <td>GOT-OCR</td>
-      <td><a href="https://github.com/Ucas-HaoranWei/GOT-OCR2.0">GOT-OCR</a></td>
+      <td><a href="https://github.com/Ucas-HaoranWei/GOT-OCR2.0">GOT-OCR GitHub</a></td>
       <td><a href="https://huggingface.co/stepfun-ai/GOT-OCR2_0">Hugging Face GOT-OCR2_0</a></td>
     </tr>
     <tr>
       <td>Nougat</td>
-      <td><a href="https://github.com/facebookresearch/nougat">Nougat</a></td>
-      <td><a href="https://huggingface.co/docs/transformers/main/en/model_doc/nougat">Hugging Face Nougat base</a></td>
+      <td><a href="https://github.com/facebookresearch/nougat">Nougat GitHub</a></td>
+      <td><a href="https://huggingface.co/docs/transformers/main/en/model_doc/nougat">Hugging Face Nougat</a></td>
     </tr>
     <tr>
-      <td>olmOCR</td>
-      <td><a href="https://github.com/allenai/olmocr">olmOCR</a></td>
-      <td>Sglang</td>
-    </tr>
-    <tr>
-      <td>SmolDocling</td>
-      <td><a href="https://huggingface.co/ds4sd/SmolDocling-256M-preview">SmolDocling-256M-Preview-transformer</a></td>
-      <td>256M-Preview-transformer</td>
-    </tr>
-    <tr>
-      <td>GPT-4o</td>
-      <td><a href="https://openai.com/index/hello-gpt-4o/">OpenAI GPT-4o</a></td>
+      <td>GPT4o</td>
+      <td><a href="https://openai.com/index/hello-gpt-4o/">OpenAI GPT4o</a></td>
       <td>2024-08-06</td>
     </tr>
     <tr>
-      <td>GPT-5.2</td>
-      <td><a href="https://openai.com/index/introducing-gpt-5-2/">OpenAI GPT-5.2</a></td>
-      <td>2025-12-11</td>
-    </tr>
-    <tr>
-      <td>Gemini-2.0 Flash</td>
-      <td><a href="https://deepmind.google/technologies/gemini/flash/">Gemini-2.0 Flash</a></td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td>Gemini-3.0 Flash</td>
-      <td><a href="https://deepmind.google/technologies/gemini/flash/">Gemini-3.0 Flash</a></td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td>Gemini-2.5 Pro</td>
-      <td><a href="https://deepmind.google/technologies/gemini/pro/">Gemini-2.5 Pro</a></td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td>Gemini-3 Pro</td>
-      <td><a href="https://deepmind.google/technologies/gemini/pro/">Gemini-3 Pro</a></td>
-      <td>-</td>
-    </tr>
-    <tr>
       <td>Qwen2-VL-72B</td>
-      <td><a href="https://qwenlm.github.io/zh/blog/qwen2-vl/">Qwen2-VL</a></td>
-      <td><a href="https://huggingface.co/Qwen/Qwen2-VL-72B-Instruct">Hugging Face Qwen2-VL-72B-Instruct</a>
-      </td>
-    <tr>
-      <td>Qwen2.5-VL-7B</td>
-      <td><a href="https://github.com/QwenLM/Qwen2.5">Qwen2.5-VL</a></td>
-      <td><a href="https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct">Hugging Face Qwen2.5-VL-7B-Instruct</a>    </td>
-    </tr>
-    <tr>
-      <td>Qwen2.5-VL-72B</td>
-      <td><a href="https://github.com/QwenLM/Qwen2.5">Qwen2.5-VL</a></td>
-      <td><a href="https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct">Hugging Face Qwen2.5-VL-72B-Instruct</a>    </td>
-    </tr>
-    <tr>
-      <td>Qwen3-VL-235B-A22B-Instruct</td>
-      <td><a href="https://github.com/QwenLM/Qwen3-VL">Qwen3-VL</a></td>
-      <td><a href="https://huggingface.co/Qwen/Qwen3-VL-235B-A22B-Instruct">Hugging Face Qwen3-VL-235B-A22B-Instruct</a></td>
+      <td><a href="https://qwenlm.github.io/zh/blog/qwen2-vl/">Qwen2-VL Blog</a></td>
+      <td><a href="https://huggingface.co/Qwen/Qwen2-VL-72B-Instruct">Hugging Face Qwen2-VL-72B-Instruct</a></td>
     </tr>
     <tr>
       <td>InternVL2-Llama3-76B</td>
-      <td><a href="https://github.com/OpenGVLab/InternVL">InternVL</a></td>
+      <td><a href="https://github.com/OpenGVLab/InternVL">InternVL GitHub</a></td>
       <td><a href="https://huggingface.co/OpenGVLab/InternVL2-Llama3-76B">Hugging Face InternVL2-Llama3-76B</a></td>
     </tr>
     <tr>
-      <td>InternVL3-78B</td>
-      <td><a href="https://github.com/OpenGVLab/InternVL">InternVL</a></td>
-      <td><a href="https://huggingface.co/OpenGVLab/InternVL3-78B">Hugging Face InternVL3-78B</a></td>
-    </tr>
-    <tr>
-      <td>InternVL3_5-241B-A28B</td>
-      <td><a href="https://github.com/OpenGVLab/InternVL">InternVL</a></td>
-      <td><a href="https://huggingface.co/OpenGVLab/InternVL3_5-241B-A28B">Hugging Face InternVL3_5-241B-A28B</a></td>
-    </tr>
-    <tr>
-      <td>DeepSeek-OCR</td>
-      <td><a href="https://github.com/deepseek-ai/DeepSeek-OCR">DeepSeek-OCR</a></td>
-      <td><a href="https://huggingface.co/deepseek-ai/DeepSeek-OCR">Hugging Face DeepSeek-OCR</a></td>
-    </tr>
-    <tr>
-      <td>DeepSeek-OCR-2</td>
-      <td><a href="https://github.com/deepseek-ai/DeepSeek-OCR-2">DeepSeek-OCR</a></td>
-      <td><a href="https://huggingface.co/deepseek-ai/DeepSeek-OCR-2">Hugging Face DeepSeek-OCR-2</a></td>
-    </tr>
-    <tr>
-      <td>Kimi K2.5</td>
-      <td><a href="https://platform.moonshot.cn/docs/guide/kimi-k2-5-quickstart">Kimi K2.5</a></td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td>OCRVerse</td>
-      <td><a href="https://github.com/DocTron-hub/OCRVerse">OCRVerse</a></td>
-      <td><a href="https://huggingface.co/DocTron/OCRVerse-text">Hugging Face OCRVerse-text</a></td>
-    </tr>
-  </tbody>
-</table>
-
-### Text Recognition
-
-<table>
-  <thead>
-    <tr>
-      <th>Model Name</th>
-      <th>Official Website</th>
-      <th>Evaluation Version/Model Weights</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>PaddleOCR</td>
+      <td>Paddle</td>
       <td><a href="https://www.paddlepaddle.org.cn/hub/scene/ocr">PaddlePaddle OCR</a></td>
       <td>2.9.1</td>
     </tr>
@@ -2163,11 +1685,15 @@ config中参数解释以及数据集格式请参考`Layout检测`小节，公式
       <td><a href="https://github.com/VikParuchuri/surya">Surya GitHub</a></td>
       <td>0.5.0</td>
     </tr>
+    <tr>
+      <td>Pix2tex</td>
+      <td><a href="https://p2t.breezedeus.com/">Pix2tex</a></td>
+      <td>0.1.2</td>
+    </tr>
   </tbody>
 </table>
 
 ### Layout
-
 <table>
   <thead>
     <tr>
@@ -2197,16 +1723,6 @@ config中参数解释以及数据集格式请参考`Layout检测`小节，公式
       <td><a href="https://github.com/opendatalab/DocLayout-YOLO">DocLayout-YOLO</a></td>
       <td><a href="https://huggingface.co/spaces/opendatalab/DocLayout-YOLO">Hugging Face DocLayout-YOLO</a></td>
     </tr>
-    <tr>
-      <td>SwinDocSegmenter</td>
-      <td><a href="https://github.com/ayanban011/SwinDocSegmenter">SwinDocSegmenter</a></td>
-      <td><a href="https://drive.google.com/file/d/1DCxG2MCza_z-yB3bLcaVvVR4Jik00Ecq/view?usp=share_link">model weights</a></td>
-    </tr>
-    <tr>
-      <td>GraphKD</td>
-      <td><a href="https://github.com/ayanban011/GraphKD">GraphKD</a></td>
-      <td><a href="https://drive.google.com/file/d/1oOzy7D6J0yb0Z_ALwpPZMbIZf_AmekvE/view?usp=sharing">model weights</a></td>
-    </tr>
   </tbody>
 </table>
 
@@ -2232,7 +1748,7 @@ config中参数解释以及数据集格式请参考`Layout检测`小节，公式
     </tr>
     <tr>
       <td>Pix2Tex</td>
-      <td><a href="https://github.com/lukas-blecher/LaTeX-OCR">Pix2Tex</a></td>
+      <td><a href="https://p2t.breezedeus.com/">Pix2Tex</a></td>
       <td>0.1.2</td>
     </tr>
     <tr>
@@ -2316,7 +1832,7 @@ config中参数解释以及数据集格式请参考`Layout检测`小节，公式
 
 ## Acknowledgement
 
-- 感谢[2077AI](https://2077ai.com)提供的高质量数据集标注
+- 感谢[Abaka AI](https://abaka.ai)提供的高质量数据集标注
 - [PubTabNet](https://github.com/ibm-aur-nlp/PubTabNet) TEDS指标计算
 - [latexml](https://github.com/brucemiller/LaTeXML) LaTeX to HTML转换工具
 - [Tester](https://github.com/intsig-textin/markdown_tester) Markdown表格转HTML工具
